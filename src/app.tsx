@@ -8,9 +8,11 @@ interface IState {
   results: string;
 }
 
-export class App extends React.Component<undefined, IState> {
-  public constructor(){
-    super();
+interface IProps{}
+
+export class App extends React.Component<IProps, IState> {
+  public constructor(props: IProps){
+    super(props);
     this.state = {
       path: '',
       results: ''
@@ -34,20 +36,27 @@ export class App extends React.Component<undefined, IState> {
             type="text"
             placeholder="CSV File Path"
             value={this.state.path}
+            readOnly
             />
           <Button onClick={this.openDialog}>Open</Button>
           <Button 
             onClick={this.start}
+            active
             style={{
               gridColumn: "1 / -1",
             }}>
             Start
           </Button>
+
+          <p
+          style={{
+            gridColumn: "1 / -1",
+          }}>
+            {this.state.results}
+          </p>
         </div>
         
-        <p>
-          {this.state.results}
-        </p>
+
         
 
 
@@ -64,7 +73,7 @@ export class App extends React.Component<undefined, IState> {
       }
 
       this.setState({
-        path: filePaths[0]
+        path: filePaths[0],    
       });
     });
   }
