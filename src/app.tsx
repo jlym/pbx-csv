@@ -1,7 +1,8 @@
 import * as React from 'react';
 import { remote, OpenDialogOptions } from 'electron';
 import { Button, FormControl } from 'react-bootstrap';
-
+import * as fs from 'fs';
+import * as path from 'path';
 
 interface IState {
   path: string;
@@ -79,8 +80,33 @@ export class App extends React.Component<IProps, IState> {
   }
 
   private start = () => {
+
+
+    const dir = path.dirname(this.state.path);
+    if (!dir) {
+      return
+    }
+
+    const files = fs.readdirSync(dir);
+
+    let recordingsDir: string = '';
+    for (const file of files) {
+      if (file.startsWith('PBX_Queue')) {
+        recordingsDir = file;
+        break;
+      }
+    }
+
+    if (!recordingsDir) {
+      return;
+    }
+
+    const mediaFiles = fs.readdirSync(path.join(dir, recordingsDir));
+
+    const results = mediaFiles.reduce((accumulator, current) => accumulator + ' ' + current);
+
     this.setState({
-      results: "ran"
+      results,
     });
   }
 
