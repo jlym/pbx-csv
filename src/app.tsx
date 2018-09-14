@@ -3,6 +3,9 @@ import { remote, OpenDialogOptions } from 'electron';
 import { Button, FormControl } from 'react-bootstrap';
 import * as fs from 'fs';
 import * as path from 'path';
+import * as transform from 'stream-transform';
+import * as parse from 'csv-parse';
+import * as stringify from 'csv-stringify';
 
 interface IState {
   path: string;
@@ -105,6 +108,18 @@ export class App extends React.Component<IProps, IState> {
 
     const results = mediaFiles.reduce((accumulator, current) => accumulator + ' ' + current);
 
+    const readStream = fs.createReadStream(this.state.path);
+    const out = fs.createWriteStream(dir + '/temp.txt');
+    const tranformer = transform((record: any) => {
+      console.log(record);
+      return record;
+    });
+
+    const parser = parse({delimiter: ',',});
+
+    //readStream.pipe(out);
+    readStream.pipe(parser).pipe(tranformer).pipe(stringify()).pipe(out);
+    
     this.setState({
       results,
     });
