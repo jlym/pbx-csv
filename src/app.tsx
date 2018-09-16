@@ -6,6 +6,7 @@ import * as path from 'path';
 import * as transform from 'stream-transform';
 import * as parse from 'csv-parse';
 import * as stringify from 'csv-stringify';
+import { updatePBXFile } from './pbx';
 
 interface IState {
   inputPath: string;
@@ -169,7 +170,7 @@ export class App extends React.Component<IProps, IState> {
   }
 
   private start = () => {
-
+    updatePBXFile(this.state.inputPath, this.state.outputPath, this.state.pbxQueuePath);
   }
 
 }

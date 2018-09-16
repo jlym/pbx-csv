@@ -3,7 +3,10 @@ import * as transform from 'stream-transform';
 import * as parse from 'csv-parse';
 import * as stringify from 'csv-stringify';
 
-export const updatePBXFile = (pbxInputFile: string, pbxOutputFile: string, mediaFileDirectory: string): void => {
+export const updatePBXFile = (
+    pbxInputFile: string, 
+    pbxOutputFile: string, 
+    mediaFileDirectory: string): void => {
 
     const readStream = fs.createReadStream(pbxInputFile);
     const out = fs.createWriteStream(pbxOutputFile);
@@ -34,8 +37,11 @@ export const updatePBXFile = (pbxInputFile: string, pbxOutputFile: string, media
         const uniqueIDSuffix = uniqueIDTokens[uniqueIDTokens.length - 1];
 
         const file = suffixToFile.get(uniqueIDSuffix) || '';        
-        
-        cells.push(file);
+        let link = '';
+        if (file) {
+            link = `=HYPERLINK("${file}")`;
+        }
+        cells.push(link);
         
         return cells;
     });
