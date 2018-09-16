@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { remote, OpenDialogOptions } from 'electron';
+import { remote, OpenDialogOptions, SaveDialogOptions } from 'electron';
 import { Button, FormControl } from 'react-bootstrap';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -44,25 +44,25 @@ export class App extends React.Component<IProps, IState> {
             type="text"
             placeholder="Input CSV File Path"
             value={this.state.inputPath}
-            readOnly
+            onChange={this.handleInputTextFieldChange}
             />
-          <Button onClick={this.openDialog}>Open</Button>
+          <Button onClick={this.openInputFileDialog}>Open</Button>
 
           <FormControl
             type="text"
             placeholder="Output CSV File Path"
             value={this.state.outputPath}
-            readOnly
+            onChange={this.handleOutputTextFieldChange}
             />
-          <Button onClick={this.openDialog}>Open</Button>
+          <Button onClick={this.openOutputFileDialog}>Open</Button>
 
           <FormControl
             type="text"
             placeholder="PBX Queue directory"
             value={this.state.pbxQueuePath}
-            readOnly
+            onChange={this.handleQueueTextFieldChange}
             />
-          <Button onClick={this.openDialog}>Open</Button>
+          <Button onClick={this.openQueueFolderDialog}>Open</Button>
 
           <Button 
             onClick={this.start}
@@ -84,7 +84,25 @@ export class App extends React.Component<IProps, IState> {
     );
   }
 
-  private openDialog = () => {
+  private handleInputTextFieldChange = (e: React.FormEvent<HTMLInputElement>) => {
+    this.setState({
+      inputPath: e.currentTarget.value,
+    });
+  }
+
+  private handleOutputTextFieldChange = (e: React.FormEvent<HTMLInputElement>) => {
+    this.setState({
+      outputPath: e.currentTarget.value,
+    });
+  }
+
+  private handleQueueTextFieldChange = (e: React.FormEvent<HTMLInputElement>) => {
+    this.setState({
+      pbxQueuePath: e.currentTarget.value,
+    });
+  }
+
+  private openInputFileDialog = () => {
     const dialog = remote.dialog;
     const options: OpenDialogOptions = {
       properties: ['openFile'],
@@ -96,10 +114,17 @@ export class App extends React.Component<IProps, IState> {
       }      
       const filePath = filePaths[0];
 
-      this.setState((state, props) => {
+      this.setState((state) => {
         
-        let pbxQueuePath = getQueueDirectory(filePath) || undefined;
-        const outputPath = getOutputFile(filePath);
+        let pbxQueuePath = undefined;
+        if (!state.pbxQueuePath) {
+          pbxQueuePath = getQueueDirectory(filePath) || undefined;  
+        }
+
+        let outputPath = undefined;
+        if (!state.outputPath) {
+          outputPath = getOutputFile(filePath) || undefined;
+        }
 
         return {
           inputPath: filePath,
@@ -107,6 +132,39 @@ export class App extends React.Component<IProps, IState> {
           pbxQueuePath,
         };
       });
+    });
+  }
+
+  private openOutputFileDialog = () => {
+    const dialog = remote.dialog;
+    const options: SaveDialogOptions = {};
+
+    dialog.showSaveDialog(remote.getCurrentWindow(), options, (filePath: string, _: string) => {
+      if (!filePath) {
+        return;
+      }      
+
+      this.setState({
+        outputPath: filePath,
+      });      
+    });
+  }
+
+  private openQueueFolderDialog = () => {
+    const dialog = remote.dialog;
+    const options: OpenDialogOptions = {
+      properties: ['openDirectory'],
+    };
+
+    dialog.showOpenDialog(remote.getCurrentWindow(), options, (filePaths: string[], _: string[]) => {
+      if (!filePaths || filePaths.length === 0) {
+        return;
+      }      
+      const filePath = filePaths[0];
+
+      this.setState({
+        pbxQueuePath: filePath,
+      });  
     });
   }
 
