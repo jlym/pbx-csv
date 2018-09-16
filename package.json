@@ -9,7 +9,8 @@
     "package": "electron-forge package",
     "make": "electron-forge make",
     "publish": "electron-forge publish",
-    "lint": "tslint --project tsconfig.json --type-check --force"
+    "lint": "tslint --project tsconfig.json --type-check --force",
+    "test": "jest"
   },
   "keywords": [],
   "author": "jeffrey",
@@ -46,6 +47,24 @@
       }
     }
   },
+  "jest": {
+    "moduleFileExtensions": [
+      "ts",
+      "tsx",
+      "js"
+    ],
+    "transform": {
+      "^.+\\.(ts|tsx)$": "ts-jest"
+    },
+    "globals": {
+      "ts-jest": {
+        "tsConfigFile": "tsconfig.json"
+      }
+    },
+    "testMatch": [
+      "**/*.test.+(ts|tsx|js)"
+    ]
+  },
   "dependencies": {
     "@types/electron-devtools-installer": "^2.0.2",
     "@types/react": "^16.4.13",
@@ -64,12 +83,14 @@
   "devDependencies": {
     "@types/csv-parse": "^1.1.11",
     "@types/csv-stringify": "^1.4.2",
+    "@types/jest": "^23.3.2",
     "babel-plugin-transform-async-to-generator": "^6.24.1",
     "babel-preset-env": "^1.7.0",
     "babel-preset-react": "^6.24.1",
     "electron-forge": "^5.2.2",
     "electron-prebuilt-compile": "2.0.7",
     "jest": "^23.6.0",
+    "ts-jest": "^23.1.4",
     "tslint": "^5.11.0",
     "typescript": "~3.0.3"
   }
