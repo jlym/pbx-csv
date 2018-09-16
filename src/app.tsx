@@ -8,7 +8,9 @@ import * as parse from 'csv-parse';
 import * as stringify from 'csv-stringify';
 
 interface IState {
-  path: string;
+  inputPath: string;
+  outputPath: string;
+  pbxQueuePath: string;
   results: string;
 }
 
@@ -18,7 +20,9 @@ export class App extends React.Component<IProps, IState> {
   public constructor(props: IProps){
     super(props);
     this.state = {
-      path: '',
+      inputPath: '',
+      outputPath: '',
+      pbxQueuePath: '',
       results: ''
     };
   }
@@ -38,14 +42,31 @@ export class App extends React.Component<IProps, IState> {
         }}>        
           <FormControl
             type="text"
-            placeholder="CSV File Path"
-            value={this.state.path}
+            placeholder="Input CSV File Path"
+            value={this.state.inputPath}
             readOnly
             />
           <Button onClick={this.openDialog}>Open</Button>
+
+          <FormControl
+            type="text"
+            placeholder="Output CSV File Path"
+            value={this.state.outputPath}
+            readOnly
+            />
+          <Button onClick={this.openDialog}>Open</Button>
+
+          <FormControl
+            type="text"
+            placeholder="PBX Queue directory"
+            value={this.state.pbxQueuePath}
+            readOnly
+            />
+          <Button onClick={this.openDialog}>Open</Button>
+
           <Button 
             onClick={this.start}
-            active
+            bsStyle="primary"
             style={{
               gridColumn: "1 / -1",
             }}>
@@ -59,70 +80,61 @@ export class App extends React.Component<IProps, IState> {
             {this.state.results}
           </p>
         </div>
-        
-
-        
-
-
       </div>
     );
   }
 
   private openDialog = () => {
     const dialog = remote.dialog;
-    const options: OpenDialogOptions = {};
-    dialog.showOpenDialog(remote.getCurrentWindow(), options, (filePaths: string[], _: string[]) => {
-      if (!filePaths || filePaths.length == 0) {
-        return;
-      }
+    const options: OpenDialogOptions = {
+      properties: ['openFile'],
+    };
 
-      this.setState({
-        path: filePaths[0],    
+    dialog.showOpenDialog(remote.getCurrentWindow(), options, (filePaths: string[], _: string[]) => {
+      if (!filePaths || filePaths.length === 0) {
+        return;
+      }      
+      const filePath = filePaths[0];
+
+      this.setState((state, props) => {
+        
+        let pbxQueuePath = getQueueDirectory(filePath) || undefined;
+        const outputPath = getOutputFile(filePath);
+
+        return {
+          inputPath: filePath,
+          outputPath,
+          pbxQueuePath,
+        };
       });
     });
   }
 
   private start = () => {
 
-
-    const dir = path.dirname(this.state.path);
-    if (!dir) {
-      return
-    }
-
-    const files = fs.readdirSync(dir);
-
-    let recordingsDir: string = '';
-    for (const file of files) {
-      if (file.startsWith('PBX_Queue')) {
-        recordingsDir = file;
-        break;
-      }
-    }
-
-    if (!recordingsDir) {
-      return;
-    }
-
-    const mediaFiles = fs.readdirSync(path.join(dir, recordingsDir));
-
-    const results = mediaFiles.reduce((accumulator, current) => accumulator + ' ' + current);
-
-    const readStream = fs.createReadStream(this.state.path);
-    const out = fs.createWriteStream(dir + '/temp.txt');
-    const tranformer = transform((record: any) => {
-      console.log(record);
-      return record;
-    });
-
-    const parser = parse({delimiter: ',',});
-
-    //readStream.pipe(out);
-    readStream.pipe(parser).pipe(tranformer).pipe(stringify()).pipe(out);
-    
-    this.setState({
-      results,
-    });
   }
 
 }
+
+const getQueueDirectory = (inputCSVFile: string): string => {
+  const dir = path.dirname(inputCSVFile);
+  const files = fs.readdirSync(dir);
+  for (const file of files) {
+    if (!file.toLowerCase().startsWith('pbx_queue')) {
+      continue;
+    }
+
+    return path.join(dir, file);
+  }
+
+  return '';
+}
+
+const getOutputFile = (inputCSVFile: string): string => {
+  const dir = path.dirname(inputCSVFile);
+  const fileName = path.basename(inputCSVFile, '.csv');
+
+  const newFileName = fileName + '_updated' + '.csv';
+  return path.join(dir, newFileName);
+}
+

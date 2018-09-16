@@ -34,6 +34,8 @@ export const updatePBXFile = (pbxInputFile: string, pbxOutputFile: string, media
         const uniqueIDSuffix = uniqueIDTokens[uniqueIDTokens.length - 1];
 
         const file = suffixToFile.get(uniqueIDSuffix) || '';
+        
+        
         cells.push(file);
         
         return cells;
