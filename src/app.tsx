@@ -1,18 +1,19 @@
 import * as React from 'react';
 import { remote, OpenDialogOptions, SaveDialogOptions } from 'electron';
-import { Button, FormControl } from 'react-bootstrap';
+import { Button, FormControl, Glyphicon } from 'react-bootstrap';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as transform from 'stream-transform';
 import * as parse from 'csv-parse';
 import * as stringify from 'csv-stringify';
 import { updatePBXFile } from './pbx';
+import { ILogMessage } from './models';
 
 interface IState {
   inputPath: string;
   outputPath: string;
   pbxQueuePath: string;
-  results: string;
+  logMessages: ILogMessage[];
 }
 
 interface IProps{}
@@ -24,7 +25,7 @@ export class App extends React.Component<IProps, IState> {
       inputPath: '',
       outputPath: '',
       pbxQueuePath: '',
-      results: ''
+      logMessages: [],
     };
   }
   public render() {
@@ -73,14 +74,43 @@ export class App extends React.Component<IProps, IState> {
             }}>
             Start
           </Button>
-
-          <p
-          style={{
-            gridColumn: "1 / -1",
-          }}>
-            {this.state.results}
-          </p>
+          
         </div>
+
+        {this.renderLog()}
+      </div>
+    );
+  }
+
+  private renderLog() {
+    const logMessages = this.state.logMessages.map((logMessage, index) => {
+      const glyph = logMessage.level === 'info' ? "info-sign" : "remove-sign";
+      return (
+        <div 
+          key={index}
+          style={{
+            display: "grid",
+            gridTemplateColumns: "30px 1fr",
+            gridGap: "10px",
+
+          }}
+        >
+          <Glyphicon 
+            glyph={glyph} 
+            style={{
+              justifySelf: "center",
+            }}
+          />
+          <div>{logMessage.message}</div>
+        </div>
+      )
+    });
+
+    return (
+      <div style ={{
+        marginTop: "20px",
+      }}>
+        {logMessages}
       </div>
     );
   }
@@ -170,9 +200,19 @@ export class App extends React.Component<IProps, IState> {
   }
 
   private start = () => {
-    updatePBXFile(this.state.inputPath, this.state.outputPath, this.state.pbxQueuePath);
+    this.setState({
+      logMessages: [],
+    })
+    updatePBXFile(this.state.inputPath, this.state.outputPath, this.state.pbxQueuePath, this.logMessage);    
   }
 
+  private logMessage = (log: ILogMessage) => {
+    this.setState((state) => {
+      return {
+        logMessages: [ ...state.logMessages, log ],
+      };
+    })
+  }
 }
 
 const getQueueDirectory = (inputCSVFile: string): string => {
